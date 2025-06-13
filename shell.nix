@@ -74,8 +74,16 @@ pkgs.mkShell rec {
     else
       echo "Warning: fmpy is not importable."
     fi
-    
-    echo "FMPy GUI environment is ready!"
+
+    # if there is only one file in the recent files, it is a string, so we need to convert it to a list
+    # Patch MainWindow.py with the two lines after the specified line only if not already patched
+    if ! grep -q "^[[:space:]]*if isinstance(recent_files, str):" $VENV_DIR/lib/python3.12/site-packages/fmpy/gui/MainWindow.py; then
+      sed -i '/^[[:space:]]*recent_files = settings.value("recentFiles", defaultValue=\[\])[[:space:]]*$/a\
+            if isinstance(recent_files, str):\
+                recent_files = [recent_files]' $VENV_DIR/lib/python3.12/site-packages/fmpy/gui/MainWindow.py
+    fi
+
+    echo "FMPy GUI environment is ready with patched MainWindow.py!"
     echo "You can run the FMPy GUI by executing 'python -m fmpy.gui' in this shell."
     python -m fmpy.gui
   '';
